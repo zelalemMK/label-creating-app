@@ -1,17 +1,6 @@
+'use client'
 
-import "@/app/components/TemplateOne"
-
-function AnotherTempalte() {
-    return (
-        <>Hell</>
-    )
-}
-
-
-function TemplateOne() {
-  return <div className="w-[400px] h-[400px] bg-white">From template one</div>;
-}
-
+import TemplateOne from "@/app/components/TemplateOne"
 
 export default function TemplatePage() {
   return (
