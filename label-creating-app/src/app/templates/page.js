@@ -1,18 +1,16 @@
 'use client'
 
-import TemplateOne from "@/app/components/TemplateOne"
+import TemplateLandscape from "@/app/components/TemplateLandscape";
+import TemplatePortrate from "../components/TemplatePortrate";
 
 export default function TemplatePage() {
   return (
-    <div className="flex flex-row flex-wrap overflow-auto justify-center items-center bg-gray-100 ">
-      <TemplateOne />
-      <TemplateOne />
-      <TemplateOne />
-      <TemplateOne />
-      <TemplateOne />
-      <TemplateOne />
-      <TemplateOne />
+    <div>
+      <h1>Select a teemplate</h1>
+      <div className="flex flex-row flex-wrap overflow-auto justify-center items-center bg-gray-500 ">
+        <TemplateLandscape />
+        <TemplatePortrate />
+      </div>
     </div>
-
   );
 }
