@@ -20,17 +20,17 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html className="w-full h-full"lang="en">
       <head>
         <title>{metadata.title}</title>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} h-full w-full antialiased overflow-hidden`}
       >
         {/* {children}
          */}
 
-        <header className="w-full p-4 bg-red-600 text-black">
+        <header className="w-full p-4  text-black">
           <nav className="max-w-screen-xl mx-auto flex justify-between items-center">
             <h1 className=""></h1>
             <ul className="flex gap-4">
@@ -41,10 +41,10 @@ export default function RootLayout({ children }) {
           </nav>
         </header>
 
-        <main className="w-full mx-auto p-8 bg-blue-1200 flex ">{children}</main>
+        <main className="w-full h-full mx-auto p-8 bg-blue-1200 flex ">{children}</main>
 
 
-        <footer className="w-full p-4 bg-pink-500 text-white">
+        <footer className="w-full p-4  text-white">
           <div className="max-w-screen-xl mx-auto">
             <p>&copy; 2024 My Website. All Rights Reserved.</p>
           </div>
