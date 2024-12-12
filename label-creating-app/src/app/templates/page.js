@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function TemplatePage() {
+  const router = useRouter();
   const [files, setFiles] = useState({
     template: null,
     csv: null,
@@ -56,6 +58,12 @@ export default function TemplatePage() {
         [fileType]: "uploaded",
       }));
       setFiles((prev) => ({ ...prev, [fileType]: null }));
+
+      // Check if both files are uploaded
+      if (fileType === 'csv' && uploadStatus.template === 'uploaded') {
+        router.push('/generate'); // Navigate to next page
+      }
+
     } catch (error) {
       console.error("upload error:", error);
       setUploadStatus((prev) => ({
@@ -74,6 +82,7 @@ export default function TemplatePage() {
           <h2 className="text-lg font-medium mb-2">Template</h2>
           <input
             type="file"
+            accept=".pdf"
             onChange={handleFileChange("template")}
             className="block mb-2 border border-black p-1"
           />
