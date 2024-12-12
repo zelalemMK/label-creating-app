@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin:0px;
+            padding: 0px;
+        }
+        .org-stylesheet {
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        .t1-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            border: 1px solid #ddd;
+        }
+
+        .child-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .child-paragraph {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .t1-logo-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .t1-logo-container img {
+            max-width: 200px;
+            height: auto;
+        }
+        .max-width {
+            border: 1px solid black;
+            height: 400px;
+            width: 600px;
+            max-width: 700px    ;
+            margin: 0 auto;
+        }
+        .rel {
+            width: 200px;
+            height: 200px;
+            border: 1px solid black;
+
+            position: relative;
+            top: 100px;
+            left: 200px;
+        }
+
+        .fixed {
+            width: 200px;
+            height: 200px;
+            border: 1px solid black;
+
+            position: fixed;
+            right: 0;
+            bottom: 0;
+        }
+
+        .body {
+            width: 99vw;
+            height: 99vh;
+            box-sizing: border-box;
+            border: 1px solid black;
+            overflow: hidden;
+            margin: auto;
+        }
+        .header {
+            height: 10%;
+            background-color: #333;
+        }
+
+        .main {
+            height: 80%;
+            background-color: antiquewhite;
+        }
+        .footer {
+            height: 10%;
+            background-color: aqua;
+        }
+
+
+    </style>
+</head>
+
+<body class="body">
+    <header class="header"> 
+
+    </header>
+    <main class="main">
+        <div class="max-width">
+            <div class="rel"></div>
+        </div>
+    </main>
+    <footer class="footer">
+        Footer content
+    </footer>
+</body>
+
+</html>
