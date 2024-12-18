@@ -31,20 +31,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/generate/page.js"
     ],
-    "/api/process/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/process/route.js"
-    ],
     "/api/files/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/files/route.js"
     ],
-    "/_not-found/page": [
+    "/api/process/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/api/process/route.js"
     ]
   }
 }
