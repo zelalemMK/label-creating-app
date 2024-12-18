@@ -47,13 +47,12 @@ export default function GeneratePage() {
           <>
             <h1 className="text-2xl font-bold mb-6">Files Ready</h1>
             <p className="mb-8">Your documents have been generated successfully.</p>
-            <a
-              href={downloadUrl}
-              download
+            <button
+              onClick={() => window.open(downloadUrl, '_blank')}
               className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800 inline-block mb-4"
             >
               Download Files
-            </a>
+            </button>
             <br />
             <button
               onClick={() => router.push('/')}
