@@ -1,6 +1,4 @@
 {
-  "/api/upload/route": "app/api/upload/route.js",
-  "/api/process/route": "app/api/process/route.js",
   "/generate/page": "app/generate/page.js",
   "/page": "app/page.js",
   "/templates/page": "app/templates/page.js"

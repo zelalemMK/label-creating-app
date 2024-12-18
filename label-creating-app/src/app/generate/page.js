@@ -9,25 +9,26 @@ export default function GeneratePage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    processFiles();
+    getFiles();
   }, []);
 
-  const processFiles = async () => {
+  const getFiles = async () => {
     try {
       setStatus('processing');
-      const response = await fetch('/api/process', {
+      const response = await fetch('/api/files', {
         method: 'GET'
       });
 
       if (!response.ok) {
-        throw new Error('Processing failed');
+        throw new Error('Failed to get files');
       }
 
-      const data = await response.json();
-      setDownloadUrl(data.downloadUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      setDownloadUrl(url);
       setStatus('completed');
     } catch (err) {
-      console.error('Processing error:', err);
+      console.error('Download error:', err);
       setError(err.message);
       setStatus('error');
     }
