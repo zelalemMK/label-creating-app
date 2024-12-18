@@ -15,7 +15,7 @@ export default function GeneratePage() {
   const getFiles = async () => {
     try {
       setStatus('processing');
-      const response = await fetch('/api/process', {
+      const response = await fetch('/api/files', {
         method: 'GET'
       });
 
