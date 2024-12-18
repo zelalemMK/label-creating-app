@@ -1,3 +1,12 @@
+/* 
+Files needed from the user:
+1. Template file (HTML)
+2. Font file (TTF)
+3. Logo file (PNG)
+4. CSV file
+
+*/
+
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,11 +15,16 @@ export default function TemplatePage() {
   const router = useRouter();
   const [files, setFiles] = useState({
     template: null,
-    csv: null,
+    font: null,
+    logo: null,
+    csv: null
   });
+
   const [uploadStatus, setUploadStatus] = useState({
     template: "idle",
-    csv: "idle",
+    font: "idle",
+    logo: "idle",
+    csv: "idle"
   });
 
   const handleFileChange = (fileType) => (e) => {
@@ -74,46 +88,92 @@ export default function TemplatePage() {
   };
 
   return (
-    <div className="bg-white text-black p-6">
-      <h1 className="text-2xl font-bold mb-6">File Upload</h1>
+    <div className="max-w-2xl mx-auto p-4">
+      <h1 className="text-xl font-bold mb-4">Upload Files</h1>
 
-      <div className="space-y-6">
-        <div className="border p-4">
-          <h2 className="text-lg font-medium mb-2">Template</h2>
+      <div className="grid gap-3">
+        <div className="border p-3">
+          <h2 className="text-base font-medium mb-1">Template</h2>
           <input
             type="file"
-            accept=".pdf"
+            accept=".html"
             onChange={handleFileChange("template")}
-            className="block mb-2 border border-black p-1"
+            className="block w-full text-sm mb-1 border border-black p-1"
           />
           {files.template && <p className="text-sm">{files.template.name}</p>}
-          <button
-            onClick={() => handleUpload("template")}
-            className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
-            disabled={!files.template}
-          >
-            Upload Template
-          </button>
-          <p className="text-sm mt-2">{uploadStatus.template}</p>
+          <div className="flex justify-center">
+            <button
+              onClick={() => handleUpload("template")}
+              className="w-1/2 px-3 py-1.5 bg-black text-white text-sm rounded hover:bg-gray-800 disabled:opacity-50"
+              disabled={!files.template}
+            >
+              Upload Template
+            </button>
+          </div>
+          <p className="text-xs mt-1">{uploadStatus.template}</p>
         </div>
 
-        <div className="border p-4">
-          <h2 className="text-lg font-medium mb-2">CSV Data</h2>
+        <div className="border p-3">
+          <h2 className="text-base font-medium mb-1">Font File</h2>
+          <input
+            type="file"
+            accept=".ttf,.otf"
+            onChange={handleFileChange("font")}
+            className="block w-full text-sm mb-1 border border-black p-1"
+          />
+          {files.font && <p className="text-sm">{files.font.name}</p>}
+          <div className="flex justify-center">
+            <button 
+              onClick={() => handleUpload("font")}
+              className="w-1/2 px-3 py-1.5 bg-black text-white text-sm rounded hover:bg-gray-800 disabled:opacity-50"
+              disabled={!files.font}
+            >
+              Upload Font File
+            </button>
+          </div>
+          <p className="text-xs mt-1">{uploadStatus.font}</p>
+        </div>
+
+        <div className="border p-3">
+          <h2 className="text-base font-medium mb-1">Logo</h2>
+          <input
+            type="file"
+            accept=".png,.jpg,.jpeg"
+            onChange={handleFileChange("logo")}
+            className="block w-full text-sm mb-1 border border-black p-1"
+          />
+          {files.logo && <p className="text-sm">{files.logo.name}</p>}
+          <div className="flex justify-center">
+            <button 
+              onClick={() => handleUpload("logo")}
+              className="w-1/2 px-3 py-1.5 bg-black text-white text-sm rounded hover:bg-gray-800 disabled:opacity-50"
+              disabled={!files.logo}
+            >
+              Upload Logo
+            </button>
+          </div>
+          <p className="text-xs mt-1">{uploadStatus.logo}</p>
+        </div>
+
+        <div className="border p-3">
+          <h2 className="text-base font-medium mb-1">CSV Data</h2>
           <input
             type="file"
             accept=".csv"
             onChange={handleFileChange("csv")}
-            className="block mb-2 border border-black p-1"
+            className="block w-full text-sm mb-1 border border-black p-1"
           />
           {files.csv && <p className="text-sm">{files.csv.name}</p>}
+          <div className="flex justify-center">
           <button
             onClick={() => handleUpload("csv")}
-            className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+            className="w-1/2 px-3 py-1.5 bg-black text-white text-sm rounded hover:bg-gray-800 disabled:opacity-50"
             disabled={!files.csv || uploadStatus.template !== "uploaded"}
           >
             Upload CSV
           </button>
-          <p className="text-sm mt-2">{uploadStatus.csv}</p>
+          </div>
+          <p className="text-xs mt-1">{uploadStatus.csv}</p>
         </div>
       </div>
     </div>
