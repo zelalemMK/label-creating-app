@@ -13,41 +13,45 @@ import { createReadStream } from 'fs';
 import { Readable } from 'stream';
 import { finished } from 'stream/promises';
 
-export async function processFiles() {
+export async function processFiles(sessionId) {
   try {
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    
-    // Read uploaded files
-    const files = await fs.readdir(uploadsDir);
+    if (!sessionId) {
+      throw new Error('Missing sessionId');
+    }
+
+    // Build folder path for this session
+    const sessionDir = path.join(process.cwd(), 'public', 'uploads', sessionId);
+
+    // Read uploaded files from session folder
+    const files = await fs.readdir(sessionDir);
     const template = files.find(f => f.endsWith('.html'));
-    const csv = files.find(f => f.endsWith('.csv'));
+    const csvFile = files.find(f => f.endsWith('.csv'));
     const logo = files.find(f => f.endsWith('.png') || f.endsWith('.jpg'));
     const font = files.find(f => f.endsWith('.ttf') || f.endsWith('.otf'));
 
-    if (!template || !csv || !logo || !font) {
+    if (!template || !csvFile || !logo || !font) {
       throw new Error('Missing required files');
     }
 
     // Read template
     const templateContent = await fs.readFile(
-      path.join(uploadsDir, template), 
+      path.join(sessionDir, template),
       'utf-8'
     );
 
     // Parse CSV
     const records = [];
-    const csvStream = createReadStream(path.join(uploadsDir, csv))
+    const csvStream = createReadStream(path.join(sessionDir, csvFile))
       .pipe(csvParser());
-    
     csvStream.on('data', (data) => records.push(data));
     await finished(csvStream);
 
-    // Generate files for each CSV record
-    const outputDir = path.join(uploadsDir, 'output');
+    // Create output folder inside session folder
+    const outputDir = path.join(sessionDir, 'output');
     await fs.mkdir(outputDir, { recursive: true });
 
     // Debug logo processing
-    const logoPath = path.join(uploadsDir, logo);
+    const logoPath = path.join(sessionDir, logo);
     console.log('Logo path:', logoPath);
     
     // Verify file exists
@@ -69,7 +73,7 @@ export async function processFiles() {
     }
 
     const fontBase64 = await fs.readFile(
-      path.join(uploadsDir, font),
+      path.join(sessionDir, font),
       { encoding: 'base64' }
     );
 

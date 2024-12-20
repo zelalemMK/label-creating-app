@@ -1,75 +1,77 @@
-'use client'
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function GeneratePage() {
   const router = useRouter();
-  const [status, setStatus] = useState('loading');
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("sessionId") || "";
+  const [status, setStatus] = useState("loading");
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    getFiles();
-  }, []);
+    if (sessionId) {
+      getFiles();
+    } else {
+      setError("Session ID missing");
+      setStatus("error");
+    }
+  }, [sessionId]);
 
   const getFiles = async () => {
     try {
-      setStatus('processing');
-      const response = await fetch('/api/process', {
-        method: 'GET'
+      setStatus("processing");
+
+      // Pass sessionId as query param
+      const response = await fetch(`/api/process?sessionId=${sessionId}`, {
+        method: "GET",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get files');
+        throw new Error("Failed to get files");
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       setDownloadUrl(url);
-      setStatus('completed');
+      setStatus("completed");
     } catch (err) {
-      console.error('Download error:', err);
+      console.error("Download error:", err);
       setError(err.message);
-      setStatus('error');
+      setStatus("error");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center p-8 border border-black">
-        {status === 'loading' || status === 'processing' ? (
+        {status === "loading" || status === "processing" ? (
           <>
             <h1 className="text-2xl font-bold mb-6">Processing Files</h1>
             <div className="animate-spin border-t-2 border-black h-8 w-8 rounded-full mx-auto mb-4"></div>
             <p>Please wait while we process your files...</p>
           </>
-        ) : status === 'completed' ? (
+        ) : status === "completed" ? (
           <>
-            <h1 className="text-2xl font-bold mb-6">Files Ready</h1>
-            <p className="mb-8">Your documents have been generated successfully.</p>
-            <button
-              onClick={() => window.open(downloadUrl, '_blank')}
-              className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800 inline-block mb-4"
+            <h1 className="text-2xl font-bold mb-6">Files Processed</h1>
+            <a
+              href={downloadUrl}
+              download={`${sessionId}.zip`}
+              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
             >
-              Download Files
-            </button>
-            <br />
-            <button
-              onClick={() => router.push('/')}
-              className="px-6 py-2 border border-black rounded hover:bg-gray-100"
-            >
-              Return Home
-            </button>
+              Download ZIP
+            </a>
           </>
         ) : (
           <>
             <h1 className="text-2xl font-bold mb-6">Error</h1>
-            <p className="mb-8 text-black">{error || 'Something went wrong'}</p>
+            <p>{error}</p>
             <button
-              onClick={() => router.push('/')}
-              className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800"
+              onClick={() => router.push("/templates")}
+              className="mt-4 px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
             >
-              Try Again
+              Go Back
             </button>
           </>
         )}

@@ -8,24 +8,30 @@ Files needed from the user:
 */
 
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
 
 export default function TemplatePage() {
   const router = useRouter();
+  const [sessionId, setSessionId] = useState(null);
   const [files, setFiles] = useState({
     template: null,
     font: null,
     logo: null,
     csv: null
   });
-
   const [uploadStatus, setUploadStatus] = useState({
     template: "idle",
     font: "idle",
     logo: "idle",
     csv: "idle"
   });
+
+  // Generate sessionId one time
+  useEffect(() => {
+    setSessionId(uuidv4());
+  }, []);
 
   const handleFileChange = (fileType) => (e) => {
     const file = e.target.files[0];
@@ -39,8 +45,7 @@ export default function TemplatePage() {
   };
 
   const handleUpload = async (fileType) => {
-    const file = files[fileType];
-    if (!file) {
+    if (!files[fileType] || !sessionId) {
       setUploadStatus((prev) => ({
         ...prev,
         [fileType]: "please choose a file first",
@@ -55,16 +60,17 @@ export default function TemplatePage() {
       }));
 
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", files[fileType]);
       formData.append("type", fileType);
+      formData.append("sessionId", sessionId);
 
       const response = await fetch("/api/upload", {
         method: "POST",
-        body: formData,
+        body: formData
       });
 
       if (!response.ok) {
-        throw new Error("upload failed");
+        throw new Error("Upload failed");
       }
 
       setUploadStatus((prev) => ({
@@ -73,13 +79,21 @@ export default function TemplatePage() {
       }));
       setFiles((prev) => ({ ...prev, [fileType]: null }));
 
-      // Check if both files are uploaded
-      if (fileType === 'csv' && uploadStatus.template === 'uploaded') {
-        router.push('/generate'); // Navigate to next page
-      }
+      // Check if all files are uploaded
+      const newStatus = {
+        ...uploadStatus,
+        [fileType]: "uploaded"
+      };
+      const allUploaded = Object.values(newStatus).every(
+        (status) => status === "uploaded"
+      );
 
+      if (allUploaded) {
+        // Move to next step
+        router.push(`/generate?sessionId=${sessionId}`);
+      }
     } catch (error) {
-      console.error("upload error:", error);
+      console.error("Upload error:", error);
       setUploadStatus((prev) => ({
         ...prev,
         [fileType]: "upload failed",
@@ -90,8 +104,8 @@ export default function TemplatePage() {
   return (
     <div className="max-w-2xl mx-auto p-4">
       <h1 className="text-xl font-bold mb-4">Upload Files</h1>
-
       <div className="grid gap-3">
+        {/* Template */}
         <div className="border p-3">
           <h2 className="text-base font-medium mb-1">Template</h2>
           <input
@@ -113,6 +127,7 @@ export default function TemplatePage() {
           <p className="text-xs mt-1">{uploadStatus.template}</p>
         </div>
 
+        {/* Font */}
         <div className="border p-3">
           <h2 className="text-base font-medium mb-1">Font File</h2>
           <input
@@ -123,7 +138,7 @@ export default function TemplatePage() {
           />
           {files.font && <p className="text-sm">{files.font.name}</p>}
           <div className="flex justify-center">
-            <button 
+            <button
               onClick={() => handleUpload("font")}
               className="w-1/2 px-3 py-1.5 bg-black text-white text-sm rounded hover:bg-gray-800 disabled:opacity-50"
               disabled={!files.font}
@@ -134,6 +149,7 @@ export default function TemplatePage() {
           <p className="text-xs mt-1">{uploadStatus.font}</p>
         </div>
 
+        {/* Logo */}
         <div className="border p-3">
           <h2 className="text-base font-medium mb-1">Logo</h2>
           <input
@@ -144,7 +160,7 @@ export default function TemplatePage() {
           />
           {files.logo && <p className="text-sm">{files.logo.name}</p>}
           <div className="flex justify-center">
-            <button 
+            <button
               onClick={() => handleUpload("logo")}
               className="w-1/2 px-3 py-1.5 bg-black text-white text-sm rounded hover:bg-gray-800 disabled:opacity-50"
               disabled={!files.logo}
@@ -155,8 +171,9 @@ export default function TemplatePage() {
           <p className="text-xs mt-1">{uploadStatus.logo}</p>
         </div>
 
+        {/* CSV */}
         <div className="border p-3">
-          <h2 className="text-base font-medium mb-1">CSV Data</h2>
+          <h2 className="text-base font-medium mb-1">CSV File</h2>
           <input
             type="file"
             accept=".csv"
@@ -165,17 +182,33 @@ export default function TemplatePage() {
           />
           {files.csv && <p className="text-sm">{files.csv.name}</p>}
           <div className="flex justify-center">
-          <button
-            onClick={() => handleUpload("csv")}
-            className="w-1/2 px-3 py-1.5 bg-black text-white text-sm rounded hover:bg-gray-800 disabled:opacity-50"
-            disabled={!files.csv || uploadStatus.template !== "uploaded"}
-          >
-            Upload CSV
-          </button>
+            <button
+              onClick={() => handleUpload("csv")}
+              className="w-1/2 px-3 py-1.5 bg-black text-white text-sm rounded hover:bg-gray-800 disabled:opacity-50"
+              disabled={!files.csv}
+            >
+              Upload CSV
+            </button>
           </div>
           <p className="text-xs mt-1">{uploadStatus.csv}</p>
         </div>
       </div>
     </div>
   );
+}
+
+// Helper function for file acceptance
+function getAcceptTypes(fileType) {
+  switch (fileType) {
+    case "template":
+      return ".html";
+    case "font":
+      return ".ttf,.otf";
+    case "logo":
+      return ".png,.jpg,.jpeg";
+    case "csv":
+      return ".csv";
+    default:
+      return "*/*";
+  }
 }

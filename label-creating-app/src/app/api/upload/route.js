@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
 export async function POST(request) {
@@ -7,10 +7,11 @@ export async function POST(request) {
     const data = await request.formData();
     const file = data.get("file");
     const type = data.get("type");
+    const sessionId = data.get("sessionId");
 
-    if (!file || !type) {
+    if (!file || !type || !sessionId) {
       return NextResponse.json(
-        { error: "Missing file or type" },
+        { error: "Missing file, type, or sessionId" },
         { status: 400 }
       );
     }
@@ -18,15 +19,20 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const uploadDir = join(process.cwd(), "public", "uploads");
-    const path = join(uploadDir, file.name);
+    // Create session folder
+    const baseDir = join(process.cwd(), "public", "uploads");
+    const sessionDir = join(baseDir, sessionId);
+    await mkdir(sessionDir, { recursive: true });
 
-    await writeFile(path, buffer);
+    // Save file to the session folder
+    const filePath = join(sessionDir, file.name);
+    await writeFile(filePath, buffer);
 
     return NextResponse.json(
       {
-        message: `${type} file uploaded`,
-        path: `/uploads/${type}/${file.name}`,
+        message: `${type} file uploaded under session ${sessionId}`,
+        path: `/uploads/${sessionId}/${file.name}`,
+        sessionId: sessionId
       },
       { status: 201 }
     );
