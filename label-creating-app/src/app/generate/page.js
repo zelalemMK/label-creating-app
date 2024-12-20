@@ -62,11 +62,8 @@ export default function GeneratePage() {
             >
               Download ZIP
             </a>
-          </>
-        ) : (
-          <>
-            <h1 className="text-2xl font-bold mb-6">Error</h1>
-            <p>{error}</p>
+            <h1 className="text-2xl font-bold mb-6"></h1>
+            {/* <p>{error}</p> */}
             <button
               onClick={() => router.push("/templates")}
               className="mt-4 px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
@@ -74,6 +71,8 @@ export default function GeneratePage() {
               Go Back
             </button>
           </>
+        ) : (
+          <></>
         )}
       </div>
     </div>
