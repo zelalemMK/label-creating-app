@@ -1,4 +1,4 @@
-import React from "react";
+import {React, Suspense} from "react";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -35,14 +35,17 @@ export default function RootLayout({ children }) {
             <h1 className=""></h1>
             <ul className="flex gap-4">
               <li>
-                <a href="/templates" className="text-white">Contact</a>
+                <a href="/templates" className="text-white">
+                  Contact
+                </a>
               </li>
             </ul>
           </nav>
         </header>
 
-        <main className="h-[80%]">{children}</main>
-
+        <Suspense>
+          <main className="h-[80%]">{children}</main>
+        </Suspense>
 
         <footer className="w-full h-[10%] bg-slate-700  text-white">
           <div className="max-w-screen-xl mx-auto">
