@@ -8,10 +8,45 @@ Task:
 
 import fs from 'fs/promises';
 import path from 'path';
-import csvParser from 'csv-parser';
-import { createReadStream } from 'fs';
-import { Readable } from 'stream';
-import { finished } from 'stream/promises';
+import { JSDOM } from 'jsdom';
+
+
+
+async function loadTemplateAsHTMLDOM(sessionDir, fileName) {
+  const filePath = path.join(sessionDir, fileName);
+  const contents = await fs.readFile(filePath, "utf-8");
+  const dom = new JSDOM(contents);
+  return dom.window.document;
+}
+
+// maybe a function to parse the csv file
+// and then one big function that does everything
+//  and saves the final html file
+
+async function readCsvToDoubleArray(sessionDir, fileName) {
+  // Read entire CSV file into a single string
+  const filePath = path.join(sessionDir, fileName);
+  const csvData = await fs.readFile(path.resolve(filePath),'utf-8', (err, data) => {
+    if (err) {
+      console.error('Error reading file:', err);
+      throw err;
+    }
+    return data;
+  });
+
+  // Split into lines, then split each line by commas
+  const rows = csvData
+    .split("\n") // Separate rows by newline
+    .map((line) => line.trim()) // Trim whitespace
+    .filter((line) => line); // Remove empty lines if any
+
+  // Convert each row into an array of values
+  const doubleArray = rows.map((row) => row.split(","));
+
+  return doubleArray;
+}
+
+
 
 export async function processFiles(sessionId) {
   try {
@@ -24,97 +59,69 @@ export async function processFiles(sessionId) {
 
     // Read uploaded files from session folder
     const files = await fs.readdir(sessionDir);
-    const template = files.find(f => f.endsWith('.html'));
+    const templateFile = files.find(f => f.endsWith('.html'));
     const csvFile = files.find(f => f.endsWith('.csv'));
     const logo = files.find(f => f.endsWith('.png') || f.endsWith('.jpg'));
     const font = files.find(f => f.endsWith('.ttf') || f.endsWith('.otf'));
 
-    if (!template || !csvFile || !logo || !font) {
-      throw new Error('Missing required files');
-    }
+    // Load it as a DOM object
+    const document = await loadTemplateAsHTMLDOM(sessionDir, templateFile);
+    console.log('Document:', document.body.innerHTML);
+    const csvData = await readCsvToDoubleArray(sessionDir, csvFile);
 
-    // Read template
-    const templateContent = await fs.readFile(
-      path.join(sessionDir, template),
-      'utf-8'
-    );
+    // Start looping thru the outer array and do the following
+    // 1. add the logo to the template
+    // 2. change the font to the uploaded font
+    // 3. change the text in the template divs to the csv data
+    // 4. save the final html file
 
-    // Parse CSV
-    const records = [];
-    const csvStream = createReadStream(path.join(sessionDir, csvFile))
-      .pipe(csvParser());
-    csvStream.on('data', (data) => records.push(data));
-    await finished(csvStream);
+    // Assuming csv has a header row
+    for (let i = 1; i < csvData.length; i++) {
+      console.log('Processing row:', csvData[i]);
+      const row = csvData[i];
+      const currentDocument = document.cloneNode(true);
 
-    // Create output folder inside session folder
-    const outputDir = path.join(sessionDir, 'output');
-    await fs.mkdir(outputDir, { recursive: true });
+      // 1. Add the logo to the template
+      const logoElement = document.createElement("img"); // create a new dom element for the logo
+      logoElement.src = logo;
+      logoElement.alt = "Something went wrong when linking the logo";
+      logoElement.width = 100; // set in pixels
+      logoElement.height = 100;
+      // TODO: Additional styling
+      currentDocument.body.prepend(logoElement);
 
-    // Debug logo processing
-    const logoPath = path.join(sessionDir, logo);
-    console.log('Logo path:', logoPath);
-    
-    // Verify file exists
-    const logoExists = await fs.access(logoPath).then(() => true).catch(() => false);
-    if (!logoExists) {
-      throw new Error(`Logo file not found at ${logoPath}`);
-    }
+      // 2. Change the font to the uploaded font
+      const styleElement = document.createElement("style");
+      styleElement.textContent = `@font-face {
+        font-family: 'CustomFont';
+        src: url(${font}) format('truetype');
+      }
+      body {
+        font-family: 'CustomFont';
+      }`;
+      currentDocument.head.appendChild(styleElement);
 
-    // Read and convert logo
-    const logoBase64 = await fs.readFile(logoPath, { encoding: 'base64' });
-    console.log('Logo converted to base64');
-    
-    const logoExt = path.extname(logo).substring(1);
-    console.log('Logo extension:', logoExt);
+      // 3. Change the text in the template divs to the csv data
+      // only select divs that are child elements of the first div with the class "content"
+      const contentDiv = currentDocument.querySelector(".container");
+      if (contentDiv === null) {
+        throw new Error("No div with class 'content' found in the template");
+      }
 
-    // Verify template has placeholder
-    if (!templateContent.includes('{{logo}}')) {
-      throw new Error('Logo placeholder not found in template');
-    }
+      const divs = contentDiv.querySelectorAll("div");
+      for (let j = 0; j < divs.length; j++) {
+        divs[j].textContent = row[j];
+      }
 
-    const fontBase64 = await fs.readFile(
-      path.join(sessionDir, font),
-      { encoding: 'base64' }
-    );
-
-    // Process each record
-    for (let i = 0; i < records.length; i++) {
-      let html = templateContent;
-      
-      // Replace placeholders with CSV data
-      Object.entries(records[i]).forEach(([key, value]) => {
-        html = html.replace(new RegExp(`{{${key}}}`, 'g'), value);
-      });
-
-      // Insert logo with logging
-      const imgTag = `<img src="data:image/${logoExt};base64,${logoBase64}" 
-        style="max-width: 100%; height: auto;" 
-        alt="Logo" />`;
-      console.log('Generated image tag');
-      
-      html = html.replace('{{logo}}', imgTag);
-      console.log('Replaced logo placeholder');
-
-      // Insert custom font
-      html = html.replace(
-        '</head>',
-        `<style>
-          @font-face {
-            font-family: 'CustomFont';
-            src: url(data:font/truetype;charset=utf-8;base64,${fontBase64});
-          }
-          body { font-family: 'CustomFont', sans-serif; }
-        </style>
-        </head>`
+      // 4. Save the final html file
+      const finalHtml = currentDocument.documentElement.outerHTML;
+      await fs.writeFile(
+        path.join(sessionDir, `label_${i + 1}.html`),
+        finalHtml,
+        "utf-8"
       );
-
-      // Save generated file
-      const outputPath = path.join(outputDir, `output_${i + 1}.html`);
-      await fs.writeFile(outputPath, html);
-      console.log(`Saved file: ${outputPath}`);
     }
-
-    return { success: true, count: records.length };
+    return { success: true };
 
   } catch (error) {
     console.error('Processing error:', error);
