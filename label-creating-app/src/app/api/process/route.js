@@ -23,11 +23,9 @@ export async function GET(request) {
     const archive = archiver('zip');
     const chunks = [];
 
-    // Add files from the session folder
+    // Only zip PDF files in the output folder
     const outputDir = join(process.cwd(), 'public', 'uploads', sessionId, 'output');
-    archive.directory(outputDir, "Label Files");
-
-    // only return files in the output folder
+    archive.glob('*.pdf', { cwd: outputDir }, { prefix: 'Label Files' });
 
     // Collect archive chunks
     archive.on('data', (chunk) => chunks.push(chunk));

@@ -3,6 +3,7 @@
     "archiver": "^7.0.1",
     "babel": "^6.23.0",
     "babel-cli": "^6.26.0",
-    "csv-parser": "^3.0.0"
+    "csv-parser": "^3.0.0",
+    "puppeteer": "^23.11.1"
   }
 }

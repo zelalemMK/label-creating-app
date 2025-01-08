@@ -9,6 +9,7 @@ Task:
 import fs from 'fs/promises';
 import path from 'path';
 import { JSDOM } from 'jsdom';
+import puppeteer from 'puppeteer';
 
 
 
@@ -94,11 +95,14 @@ export async function processFiles(sessionId) {
         throw new Error("No element with class 'logo-container' found in the template");
       }
       // const logoElement = document.createElement("img"); // create a new dom element for the logo
-      logoElement.src = logo;
-      logoElement.alt = "Something went wrong when linking the logo";
-      logoElement.width = 100; // set in pixels
-      logoElement.height = 100;
-      // TODO: Additional styling
+      const logoPath = path.join(sessionDir, logo); // e.g. "logo.png"
+      const logoData = await fs.readFile(logoPath);
+      const logoBase64 = `data:image/png;base64,${logoData.toString("base64")}`;
+
+      logoElement.src = logoBase64;
+      logoElement.alt = "Logo";
+      logoElement.width = 200;
+      logoElement.height = 200;
       currentDocument.body.prepend(logoElement);
 
       // 2. Change the font to the uploaded font
@@ -125,13 +129,29 @@ export async function processFiles(sessionId) {
         divs[j].textContent = row[j];
       }
 
-      // 4. Save the final html file
+      // 4. Save the final html file as a pdf file
       const finalHtml = currentDocument.documentElement.outerHTML;
-      await fs.writeFile(
-        path.join(outputDir, `label_${i}.html`),
-        finalHtml,
-        "utf-8"
-      );
+      const browser = await puppeteer.launch();
+      const page = await browser.newPage();
+      await page.setContent(finalHtml, { waitUntil: "networkidle0" });
+
+      const pdfPath = path.join(outputDir, `label_${i}.pdf`);
+      await page.pdf({ path: pdfPath, format: "A4", printBackground: true });
+      await browser.close();
+
+
+
+
+      // await fs.writeFile(
+      //   path.join(outputDir, `label_${i}.html`),
+      //   finalHtml,
+      //   "utf-8"
+      // );
+
+      // only save 5 for now for testing
+      if (i == 5) {
+        break;
+      }
     }
     return { success: true };
 
