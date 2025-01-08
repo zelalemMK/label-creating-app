@@ -81,12 +81,19 @@ export async function processFiles(sessionId) {
 
     // Assuming csv has a header row
     for (let i = 1; i < csvData.length; i++) {
-      console.log('Processing row:', csvData[i]);
+      console.log("Processing row:", csvData[i]);
       const row = csvData[i];
       const currentDocument = document.cloneNode(true);
 
       // 1. Add the logo to the template
-      const logoElement = document.createElement("img"); // create a new dom element for the logo
+      // inject the image into the IMG tag with the class "logo-container"
+
+      const logoElement = currentDocument.querySelector(".logo-container"); // assuming this is an image tag
+      // only inject
+      if (logoElement === null) {
+        throw new Error("No element with class 'logo-container' found in the template");
+      }
+      // const logoElement = document.createElement("img"); // create a new dom element for the logo
       logoElement.src = logo;
       logoElement.alt = "Something went wrong when linking the logo";
       logoElement.width = 100; // set in pixels
@@ -108,11 +115,12 @@ export async function processFiles(sessionId) {
       // 3. Change the text in the template divs to the csv data
       // only select divs that are child elements of the first div with the class "content"
       const contentDiv = currentDocument.querySelector(".content");
+
       if (contentDiv === null) {
         throw new Error("No div with class 'content' found in the template");
       }
-
-      const divs = contentDiv.querySelectorAll("div");
+      // only inject into divs that contian the class "inj"
+      const divs = contentDiv.querySelectorAll("div.inj");
       for (let j = 0; j < divs.length; j++) {
         divs[j].textContent = row[j];
       }
