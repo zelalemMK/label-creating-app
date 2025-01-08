@@ -89,10 +89,10 @@ export async function processFiles(sessionId) {
       // 1. Add the logo to the template
       // inject the image into the IMG tag with the class "logo-container"
 
-      const logoElement = currentDocument.querySelector(".logo-container"); // assuming this is an image tag
+      const logoElement = currentDocument.querySelector("img.logo-container"); // assuming this is an image tag
       // only inject
       if (logoElement === null) {
-        throw new Error("No element with class 'logo-container' found in the template");
+        throw new Error("No img with class 'logo-container' found in the template");
       }
       // const logoElement = document.createElement("img"); // create a new dom element for the logo
       const logoPath = path.join(sessionDir, logo); // e.g. "logo.png"
@@ -101,8 +101,9 @@ export async function processFiles(sessionId) {
 
       logoElement.src = logoBase64;
       logoElement.alt = "Logo";
-      logoElement.width = 200;
-      logoElement.height = 200;
+      logoElement.width = 240;
+      logoElement.height =  80;
+
       currentDocument.body.prepend(logoElement);
 
       // 2. Change the font to the uploaded font
@@ -131,6 +132,7 @@ export async function processFiles(sessionId) {
 
       // 4. Save the final html file as a pdf file
       const finalHtml = currentDocument.documentElement.outerHTML;
+      console.log("Final HTML:", finalHtml);
       const browser = await puppeteer.launch();
       const page = await browser.newPage();
       await page.setContent(finalHtml, { waitUntil: "networkidle0" });
