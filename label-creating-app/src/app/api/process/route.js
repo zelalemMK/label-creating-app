@@ -24,12 +24,10 @@ export async function GET(request) {
     const chunks = [];
 
     // Add files from the session folder
-    const sessionDir = join(process.cwd(), 'public', 'uploads', sessionId);
-    archive.directory(sessionDir, 'session-files');
+    const outputDir = join(process.cwd(), 'public', 'uploads', sessionId, 'output');
+    archive.directory(outputDir, "Label Files");
 
-    // Also add generated output folder if needed
-    // const outputDir = join(sessionDir, 'output');
-    // archive.directory(outputDir, 'output');
+    // only return files in the output folder
 
     // Collect archive chunks
     archive.on('data', (chunk) => chunks.push(chunk));
