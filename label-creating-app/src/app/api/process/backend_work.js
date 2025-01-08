@@ -75,6 +75,10 @@ export async function processFiles(sessionId) {
     // 3. change the text in the template divs to the csv data
     // 4. save the final html file
 
+    // create an output dir
+    const outputDir = path.join(sessionDir, 'output');
+    fs.mkdir(outputDir);
+
     // Assuming csv has a header row
     for (let i = 1; i < csvData.length; i++) {
       console.log('Processing row:', csvData[i]);
@@ -103,7 +107,7 @@ export async function processFiles(sessionId) {
 
       // 3. Change the text in the template divs to the csv data
       // only select divs that are child elements of the first div with the class "content"
-      const contentDiv = currentDocument.querySelector(".container");
+      const contentDiv = currentDocument.querySelector(".content");
       if (contentDiv === null) {
         throw new Error("No div with class 'content' found in the template");
       }
@@ -116,7 +120,7 @@ export async function processFiles(sessionId) {
       // 4. Save the final html file
       const finalHtml = currentDocument.documentElement.outerHTML;
       await fs.writeFile(
-        path.join(sessionDir, `label_${i + 1}.html`),
+        path.join(outputDir, `label_${i}.html`),
         finalHtml,
         "utf-8"
       );
