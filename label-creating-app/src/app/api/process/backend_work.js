@@ -6,12 +6,11 @@ Task:
 4. Change the font into the uploaded font
 */
 
-import fs from 'fs/promises';
-import path from 'path';
-import { JSDOM } from 'jsdom';
-import puppeteer from 'puppeteer';
-
-
+import fs from "fs/promises";
+import path from "path";
+import { JSDOM } from "jsdom";
+import puppeteer from "puppeteer";
+import encodeCode128B from "@/app/lib/barcode_encoder";
 
 async function loadTemplateAsHTMLDOM(sessionDir, fileName) {
   const filePath = path.join(sessionDir, fileName);
@@ -27,13 +26,17 @@ async function loadTemplateAsHTMLDOM(sessionDir, fileName) {
 async function readCsvToDoubleArray(sessionDir, fileName) {
   // Read entire CSV file into a single string
   const filePath = path.join(sessionDir, fileName);
-  const csvData = await fs.readFile(path.resolve(filePath),'utf-8', (err, data) => {
-    if (err) {
-      console.error('Error reading file:', err);
-      throw err;
+  const csvData = await fs.readFile(
+    path.resolve(filePath),
+    "utf-8",
+    (err, data) => {
+      if (err) {
+        console.error("Error reading file:", err);
+        throw err;
+      }
+      return data;
     }
-    return data;
-  });
+  );
 
   // Split into lines, then split each line by commas
   const rows = csvData
@@ -47,27 +50,59 @@ async function readCsvToDoubleArray(sessionDir, fileName) {
   return doubleArray;
 }
 
-
-
 export async function processFiles(sessionId) {
   try {
     if (!sessionId) {
-      throw new Error('Missing sessionId');
+      throw new Error("Missing sessionId");
     }
 
     // Build folder path for this session
-    const sessionDir = path.join(process.cwd(), 'public', 'uploads', sessionId);
+    const sessionDir = path.join(process.cwd(), "public", "uploads", sessionId);
 
     // Read uploaded files from session folder
     const files = await fs.readdir(sessionDir);
-    const templateFile = files.find(f => f.endsWith('.html'));
-    const csvFile = files.find(f => f.endsWith('.csv'));
-    const logo = files.find(f => f.endsWith('.png') || f.endsWith('.jpg'));
-    const font = files.find(f => f.endsWith('.ttf') || f.endsWith('.otf'));
+    const templateFile = files.find((f) => f.endsWith(".html"));
+    const csvFile = files.find((f) => f.endsWith(".csv"));
+    const logo = files.find((f) => f.endsWith(".png") || f.endsWith(".jpg"));
+    const font = files.find((f) => f.endsWith(".ttf") || f.endsWith(".otf"));
+
+    // turn the base font into base64 string
+    const basicFont = await fs.readFile(
+      path.join(
+      process.cwd(),
+      "public",
+      "uploads",
+      sessionId,
+      font
+    ));
+
+    console.log("Basic Font location: ", basicFont);
+    const basicFontData = basicFont.toString("base64");
+    const base64BasicFont = "data:font/ttf;base64,"+ basicFontData;
+
+
+
+    // import barcode font
+    const barcodeFontLocation = await fs.readdir(
+      path.join(
+        process.cwd(),
+        "src/app/lib/fonts",
+      )
+    );
+    const barcodeFont = barcodeFontLocation.find((f) => f.endsWith(".ttf"));
+    // turn the font into a base64 string
+    const fontPath = path.join(
+      process.cwd(),
+      "src/app/lib/fonts",
+      barcodeFont
+    );
+    const fontData = await fs.readFile(fontPath);
+    const base64BarcodeFont = "data:font/ttf;base64,"+ fontData.toString("base64");
+
 
     // Load it as a DOM object
     const document = await loadTemplateAsHTMLDOM(sessionDir, templateFile);
-    console.log('Document:', document.body.innerHTML);
+    // console.log("Document:", document.body.innerHTML);
     const csvData = await readCsvToDoubleArray(sessionDir, csvFile);
 
     // Start looping thru the outer array and do the following
@@ -77,7 +112,7 @@ export async function processFiles(sessionId) {
     // 4. save the final html file
 
     // create an output dir
-    const outputDir = path.join(sessionDir, 'output');
+    const outputDir = path.join(sessionDir, "output");
     fs.mkdir(outputDir);
 
     // Assuming csv has a header row
@@ -89,10 +124,12 @@ export async function processFiles(sessionId) {
       // 1. Add the logo to the template
       // inject the image into the IMG tag with the class "logo-container"
 
-      const logoElement = currentDocument.querySelector("img.logo-container"); // assuming this is an image tag
+      const logoElement = currentDocument.querySelector("img.logo"); // assuming this is an image tag
       // only inject
       if (logoElement === null) {
-        throw new Error("No img with class 'logo-container' found in the template");
+        throw new Error(
+          "No img with class 'logo-container' found in the template"
+        );
       }
       // const logoElement = document.createElement("img"); // create a new dom element for the logo
       const logoPath = path.join(sessionDir, logo); // e.g. "logo.png"
@@ -102,18 +139,26 @@ export async function processFiles(sessionId) {
       logoElement.src = logoBase64;
       logoElement.alt = "Logo";
       logoElement.width = 240;
-      logoElement.height =  80;
+      logoElement.height = 80;
 
-      currentDocument.body.prepend(logoElement);
+      // currentDocument.body.prepend(logoElement);
 
       // 2. Change the font to the uploaded font
       const styleElement = document.createElement("style");
-      styleElement.textContent = `@font-face {
+      styleElement.textContent = `
+      @font-face {
         font-family: 'CustomFont';
-        src: url(${font}) format('truetype');
+        src: url(${base64BasicFont}) format('truetype');
+      }
+      @font-face {
+        font-family: 'barcodeFont';
+        src: url(${base64BarcodeFont}) format('truetype');
       }
       body {
         font-family: 'CustomFont';
+      }
+      .barcode {
+        font-family: 'barcodeFont';
       }`;
       currentDocument.head.appendChild(styleElement);
 
@@ -126,23 +171,38 @@ export async function processFiles(sessionId) {
       }
       // only inject into divs that contian the class "inj"
       const divs = contentDiv.querySelectorAll("div.inj");
+
       for (let j = 0; j < divs.length; j++) {
+        // console.log("============== In inject loop ==============");
+        // console.log("Processing div: ", divs[j]);
+        // console.log("With csv data: ", row[j]);
+        // console.log("Inner text\t", divs[j].innerText);
+        if (divs[j].classList.contains("barcode")) {
+          const encoded = encodeCode128B(row[j]);
+          
+          // console.log("Encoded barcode:", encoded);
+          // console.log("Divs[j]:", divs[j]);
+
+
+          divs[j].textContent = encoded;
+          continue;
+        }
+        // get the column index of the div from the class name
         divs[j].textContent = row[j];
       }
 
       // 4. Save the final html file as a pdf file
       const finalHtml = currentDocument.documentElement.outerHTML;
-      console.log("Final HTML:", finalHtml);
-      const browser = await puppeteer.launch();
+      // write it to an html and save it on my dev environment
+      const outputHtmlPath = path.join(process.cwd(), `output_${i}.html`);
+      await fs.writeFile(outputHtmlPath, finalHtml);
+      const browser = await puppeteer.launch({ headless: true });
       const page = await browser.newPage();
       await page.setContent(finalHtml, { waitUntil: "networkidle0" });
 
       const pdfPath = path.join(outputDir, `label_${i}.pdf`);
       await page.pdf({ path: pdfPath, format: "A4", printBackground: true });
       await browser.close();
-
-
-
 
       // await fs.writeFile(
       //   path.join(outputDir, `label_${i}.html`),
@@ -156,9 +216,8 @@ export async function processFiles(sessionId) {
       }
     }
     return { success: true };
-
   } catch (error) {
-    console.error('Processing error:', error);
+    console.error("Processing error:", error);
     throw error;
   }
 }
