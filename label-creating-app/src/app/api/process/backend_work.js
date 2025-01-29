@@ -199,6 +199,20 @@ export async function processFiles(sessionId) {
       const browser = await puppeteer.launch({ headless: true });
       const page = await browser.newPage();
       await page.setContent(finalHtml, { waitUntil: "networkidle0" });
+      
+      const bodySize = await page.evaluate(() => {
+        const body = document.body;
+        return {
+          width: body.scrollWidth,
+          height: body.scrollHeight,
+        };
+      });
+
+      // Set viewport to match the body size
+      await page.setViewport({
+        width: bodySize.width,
+        height: bodySize.height,
+      });
 
       const pdfPath = path.join(outputDir, `label_${i}.pdf`);
       await page.pdf({ path: pdfPath, format: "A4", printBackground: true });
