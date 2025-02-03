@@ -68,37 +68,23 @@ export async function processFiles(sessionId) {
 
     // turn the base font into base64 string
     const basicFont = await fs.readFile(
-      path.join(
-      process.cwd(),
-      "public",
-      "uploads",
-      sessionId,
-      font
-    ));
+      path.join(process.cwd(), "public", "uploads", sessionId, font)
+    );
 
     console.log("Basic Font location: ", basicFont);
     const basicFontData = basicFont.toString("base64");
-    const base64BasicFont = "data:font/ttf;base64,"+ basicFontData;
-
-
+    const base64BasicFont = "data:font/ttf;base64," + basicFontData;
 
     // import barcode font
     const barcodeFontLocation = await fs.readdir(
-      path.join(
-        process.cwd(),
-        "src/app/lib/fonts",
-      )
+      path.join(process.cwd(), "src/app/lib/fonts")
     );
     const barcodeFont = barcodeFontLocation.find((f) => f.endsWith(".ttf"));
     // turn the font into a base64 string
-    const fontPath = path.join(
-      process.cwd(),
-      "src/app/lib/fonts",
-      barcodeFont
-    );
+    const fontPath = path.join(process.cwd(), "src/app/lib/fonts", barcodeFont);
     const fontData = await fs.readFile(fontPath);
-    const base64BarcodeFont = "data:font/ttf;base64,"+ fontData.toString("base64");
-
+    const base64BarcodeFont =
+      "data:font/ttf;base64," + fontData.toString("base64");
 
     // Load it as a DOM object
     const document = await loadTemplateAsHTMLDOM(sessionDir, templateFile);
@@ -156,6 +142,8 @@ export async function processFiles(sessionId) {
       }
       body {
         font-family: 'CustomFont';
+        margin: 0;
+        padding: 0;
       }
       .barcode {
         font-family: 'barcodeFont';
@@ -179,10 +167,9 @@ export async function processFiles(sessionId) {
         // console.log("Inner text\t", divs[j].innerText);
         if (divs[j].classList.contains("barcode")) {
           const encoded = encodeCode128B(row[j]);
-          
+
           // console.log("Encoded barcode:", encoded);
           // console.log("Divs[j]:", divs[j]);
-
 
           divs[j].textContent = encoded;
           continue;
@@ -215,7 +202,15 @@ export async function processFiles(sessionId) {
       });
 
       const pdfPath = path.join(outputDir, `label_${i}.pdf`);
-      await page.pdf({ path: pdfPath, format: "A4", printBackground: true });
+      await page.pdf({
+        path: pdfPath,
+        width: `${bodySize.width}px`, // Match the exact body width
+        height: `${bodySize.height}px`, // Match the exact body height
+        printBackground: true,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 }, // Ensure no margins
+        scale: 1,
+        displayHeaderFooter: false,
+      });
       await browser.close();
 
       // await fs.writeFile(
