@@ -213,12 +213,12 @@ export async function processFiles(sessionId) {
       });
       await browser.close();
 
-      // await fs.writeFile(
-      //   path.join(outputDir, `label_${i}.html`),
-      //   finalHtml,
-      //   "utf-8"
-      // );
-
+       await fs.writeFile(
+         path.join(outputDir, `label_${i}.html`),
+         finalHtml,
+         "utf-8"
+       );
+	console.log(`saved the html at ${outputDir}`);
       // only save 5 for now for testing
       if (i == 5) {
         break;

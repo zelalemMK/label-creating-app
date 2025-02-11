@@ -25,7 +25,7 @@ export async function GET(request) {
 
     // Only zip PDF files in the output folder
     const outputDir = join(process.cwd(), 'public', 'uploads', sessionId, 'output');
-    archive.glob('*.pdf', { cwd: outputDir }, { prefix: 'Label Files' });
+    archive.glob('*.{pdf,html}', { cwd: outputDir }, { prefix: 'Label Files' });
 
     // Collect archive chunks
     archive.on('data', (chunk) => chunks.push(chunk));
