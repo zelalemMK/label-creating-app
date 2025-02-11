@@ -44,14 +44,14 @@ export default function RootLayout({ children }) {
         </header>
 
         <Suspense>
-          <main className="h-[80%]">{children}</main>
+          <main className="h-[70vh]">{children}</main>
         </Suspense>
 
-        <footer className="w-full h-[10%] bg-slate-700  text-white">
+        {/* <footer className="w-full h-[10%] bg-slate-700  text-white">
           <div className="max-w-screen-xl mx-auto">
             <p>&copy; 2024 My Website. All Rights Reserved.</p>
           </div>
-        </footer>
+        </footer> */}
       </body>
     </html>
   );

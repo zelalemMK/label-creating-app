@@ -7,7 +7,8 @@ export default function HomePage() {
   const router = useRouter();
 
   return (
-    <div>
+    // center the div 
+    <div className="flex flex-col w-3/4 mx-auto mt-20 border p-4 rounded">
       <h2 className="text-4xl font-bold mb-4">Welcome to My Website</h2>
       <p>
         This is the home page content where you can provide information and
