@@ -4,6 +4,7 @@
     "babel": "^6.23.0",
     "babel-cli": "^6.26.0",
     "csv-parser": "^3.0.0",
-    "puppeteer": "^23.11.1"
+    "puppeteer": "^23.11.1",
+    "wkhtmltopdf": "^0.4.0"
   }
 }

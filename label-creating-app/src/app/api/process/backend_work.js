@@ -9,8 +9,12 @@ Task:
 import fs from "fs/promises";
 import path from "path";
 import { JSDOM } from "jsdom";
-import puppeteer from "puppeteer";
+// import puppeteer from "puppeteer";
+import { exec } from "child_process";
+import { promisify } from "util";
 import encodeCode128B from "@/app/lib/barcode_encoder";
+
+const execPromise = promisify(exec);
 
 async function loadTemplateAsHTMLDOM(sessionDir, fileName) {
   const filePath = path.join(sessionDir, fileName);
@@ -180,45 +184,71 @@ export async function processFiles(sessionId) {
 
       // 4. Save the final html file as a pdf file
       const finalHtml = currentDocument.documentElement.outerHTML;
-      // write it to an html and save it on my dev environment
-      const outputHtmlPath = path.join(process.cwd(), `output_${i}.html`);
-      await fs.writeFile(outputHtmlPath, finalHtml);
-      const browser = await puppeteer.launch({ headless: true });
-      const page = await browser.newPage();
-      await page.setContent(finalHtml, { waitUntil: "networkidle0" });
-      
-      const bodySize = await page.evaluate(() => {
-        const body = document.body;
-        return {
-          width: body.scrollWidth,
-          height: body.scrollHeight,
-        };
-      });
-
-      // Set viewport to match the body size
-      await page.setViewport({
-        width: bodySize.width,
-        height: bodySize.height,
-      });
-
+      const tempHtmlPath = path.join(sessionDir, `temp_${i}.html`);
       const pdfPath = path.join(outputDir, `label_${i}.pdf`);
-      await page.pdf({
-        path: pdfPath,
-        width: `${bodySize.width}px`, // Match the exact body width
-        height: `${bodySize.height}px`, // Match the exact body height
-        printBackground: true,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 }, // Ensure no margins
-        scale: 1,
-        displayHeaderFooter: false,
-      });
-      await browser.close();
 
-       await fs.writeFile(
-         path.join(outputDir, `label_${i}.html`),
-         finalHtml,
-         "utf-8"
-       );
-	console.log(`saved the html at ${outputDir}`);
+      await fs.writeFile(tempHtmlPath, finalHtml, "utf-8");
+
+      try {
+        // Convert HTML to PDF using wkhtmltopdf
+        await execPromise(`wkhtmltopdf \
+          --enable-local-file-access \
+          --margin-top 0 \
+          --margin-right 0 \
+          --margin-bottom 0 \
+          --margin-left 0 \
+          --page-width 100mm \
+          --page-height 150mm \
+          ${tempHtmlPath} ${pdfPath}`);
+
+        console.log(`Generated PDF: ${pdfPath}`);
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+        throw error;
+      } finally {
+        // Clean up temporary HTML file
+        await fs.unlink(tempHtmlPath);
+      }
+      
+      // // write it to an html and save it on my dev environment
+      // const outputHtmlPath = path.join(process.cwd(), `output_${i}.html`);
+      // await fs.writeFile(outputHtmlPath, finalHtml);
+      // const browser = await puppeteer.launch({ headless: true });
+      // const page = await browser.newPage();
+      // await page.setContent(finalHtml, { waitUntil: "networkidle0" });
+      
+      // const bodySize = await page.evaluate(() => {
+      //   const body = document.body;
+      //   return {
+      //     width: body.scrollWidth,
+      //     height: body.scrollHeight,
+      //   };
+      // });
+
+  //     // Set viewport to match the body size
+  //     await page.setViewport({
+  //       width: bodySize.width,
+  //       height: bodySize.height,
+  //     });
+
+  //     const pdfPath = path.join(outputDir, `label_${i}.pdf`);
+  //     await page.pdf({
+  //       path: pdfPath,
+  //       width: `${bodySize.width}px`, // Match the exact body width
+  //       height: `${bodySize.height}px`, // Match the exact body height
+  //       printBackground: true,
+  //       margin: { top: 0, right: 0, bottom: 0, left: 0 }, // Ensure no margins
+  //       scale: 1,
+  //       displayHeaderFooter: false,
+  //     });
+  //     await browser.close();
+
+  //      await fs.writeFile(
+  //        path.join(outputDir, `label_${i}.html`),
+  //        finalHtml,
+  //        "utf-8"
+  //      );
+	// console.log(`saved the html at ${outputDir}`);
       // only save 5 for now for testing
       if (i == 5) {
         break;
